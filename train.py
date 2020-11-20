@@ -48,6 +48,7 @@ def int2onehot(label):
     return label_onehot
 
 def train_step(batchSize):
+    resnet.train()
     x, label = create_epoch(batchSize)
     label_onehot = int2onehot(label)
     
@@ -68,6 +69,19 @@ def train_step(batchSize):
     
     accuracy = float(np.sum([int(label[i]==y_class[i]) for i in range(label.shape[0])])) / batchSize
     return loss_np, accuracy
+
+def val_step(valSize):
+    resnet.eval()
+    val_label = np.array([int(labels[index]) for index in val_set_list[:valSize]])
+    val_x = np.array([train_set[index].reshape(3, 32, 32) for index in val_set_list[:valSize]])
+    tensor_x = torch.from_numpy(val_x).cuda().float()
+
+    val_y_onehot = resnet(tensor_x).detach().cpu()
+    val_y_class = torch.argmax(val_y_onehot, 1).numpy()
+    
+    accuracy = float(np.sum([int(val_label[i]==val_y_class[i]) for i in range(val_label.shape[0])])) / val_label.shape[0]
+    
+    printlog("Val Accuracy: " + str(accuracy))
     
 
 os.remove(LOGPATH)
@@ -76,6 +90,7 @@ printlog("Current PID: " + str(os.getpid()))
 # 使用split_val_train.py将train.npy数据集拆分成两部分
 # 从"train_list.npy"中读取属于train部分的标号
 train_list = np.load("train_list.npy")  # 用于训练的数据标号列表
+val_set_list = np.load("val_list.npy")  # 用于验证的数据标号列表
 train_set = np.load("q1_data/train.npy")  # train和val的数据
 with open('q1_data/train2.csv', 'r') as f:
     csvreader = csv.reader(f)
@@ -84,11 +99,14 @@ with open('q1_data/train2.csv', 'r') as f:
 
 torch.cuda.set_device(CUDA_DEVICE_IDX)
 resnet = ResNet.resnet34(num_classes=CLASS_NUM).cuda()
-optimizer = torch.optim.Adam(resnet.parameters(), lr=LR)
+optimizer = torch.optim.Adam(resnet.parameters(), lr=LR, weight_decay=0.1)
 
 for i in range(5000):
     loss = train_step(500)
     printlog(loss)
+    
+    if (i + 1) % 10 == 0:
+        val_step(100)
     
     if (i + 1) % 1000 == 0:
         torch.save(resnet.state_dict(),"./pklmodels/train_epoch_"+str(i+1)+".pkl")
