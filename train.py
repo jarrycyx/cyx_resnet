@@ -10,6 +10,10 @@ import shutil
 CUDA_DEVICE_IDX = 2
 LR = 0.00001
 CLASS_NUM = 100
+EPOCH_NUM = 15000
+EPOCH_SIZE = 500
+VAL_EVERY = 20
+SAVE_EVERY = EPOCH_NUM / 5
 LOGPATH = "resnet_train.log"
 
 def get_time_stamp():
@@ -63,7 +67,7 @@ def train_step(batchSize):
         optimizer.step()
         # print(loss)
     
-    loss_np = loss.detach().cpu()
+    loss_np = loss.detach().cpu().numpy()
     y = tensor_y.detach().cpu()
     y_class = torch.argmax(y, 1).numpy()
     
@@ -99,14 +103,14 @@ with open('q1_data/train2.csv', 'r') as f:
 
 torch.cuda.set_device(CUDA_DEVICE_IDX)
 resnet = ResNet.resnet34(num_classes=CLASS_NUM).cuda()
-optimizer = torch.optim.Adam(resnet.parameters(), lr=LR, weight_decay=0.1)
+optimizer = torch.optim.Adam(resnet.parameters(), lr=LR, weight_decay=0.005)
 
-for i in range(5000):
-    loss = train_step(500)
-    printlog(loss)
+for i in range(EPOCH_NUM):
+    loss, accuracy = train_step(EPOCH_SIZE)
+    printlog("{:d}/{:d} loss: {:.4f}  accuracy: {:.4f}".format(i, EPOCH_NUM, loss, accuracy))
     
-    if (i + 1) % 10 == 0:
-        val_step(100)
+    if (i + 1) % VAL_EVERY == 0:
+        val_step(EPOCH_SIZE)
     
-    if (i + 1) % 1000 == 0:
+    if (i + 1) % SAVE_EVERY == 0:
         torch.save(resnet.state_dict(),"./pklmodels/train_epoch_"+str(i+1)+".pkl")
