@@ -4,17 +4,25 @@ import torch.nn as nn
 import cv2
 import csv
 import ResNet
+import classnet
 import time, os
 import shutil
+from torchvision import transforms as tfs
+from PIL import Image
 
 CUDA_DEVICE_IDX = 2
 LR = 0.00001
 CLASS_NUM = 100
-EPOCH_NUM = 15000
-EPOCH_SIZE = 500
+EPOCH_NUM = 5000
+EPOCH_SIZE = 100
 VAL_EVERY = 20
 SAVE_EVERY = EPOCH_NUM / 5
 LOGPATH = "resnet_train.log"
+WEIGHT_DECAY = 0.01
+
+UP_SIZE = (100,100)
+
+SAVE_IMG = False
 
 def get_time_stamp():
     return str(time.strftime("%Y-%m-%d-%H%M%S", time.localtime()))
@@ -30,18 +38,34 @@ def printlog(data, p=1, fp=None):
         print(get_time_stamp() + " " + str(data))
     logfile.close()
 
+def imgPreprcs(img): # 3x32x32
+    img = img.transpose(1,2,0)
+    img_med = cv2.medianBlur(img,3)#RGBmed(img, 3)
+    #img_t =  img_med.transpose(2,0,1)
+    img_pil = Image.fromarray(img_med, mode='RGB')
+    im_aug = tfs.Compose([
+        tfs.RandomHorizontalFlip(),
+        tfs.ColorJitter(brightness=0.5, contrast=0.5),
+        tfs.RandomRotation(20),  # 随机旋转
+        tfs.Resize(UP_SIZE),  # 调整大小
+    ])
+    return np.asarray(im_aug(img_pil)).transpose(2,0,1)
+
 def create_epoch(batchSize):
     dataset_size = train_list.shape[0] # 用于训练的部分大小 50000-2000
-    x = np.zeros([batchSize, 3, 32, 32])
+    x = np.zeros([batchSize, 3, UP_SIZE[0], UP_SIZE[1]]).astype(np.float32)
     label = np.zeros(batchSize)
     
     for i in range(batchSize):
         train_list_index = int(np.random.random()*dataset_size) # 随机生成一个“训练数据标号列表”的标号
         img_index = train_list[train_list_index] # 得到对应的训练数据标号
         # img_index = i
-        x[i] = train_set[img_index].reshape(3, 32, 32) # 从数据集中取出图像
+        x[i] = imgPreprcs(train_set[img_index].reshape(3, 32, 32)) # 从数据集中取出图像
         label[i] = int(labels[img_index])
-        
+    
+        if SAVE_IMG:
+            cv2.imwrite("imgs/"+str(img_index)+".jpg", cv2.cvtColor(x[i].transpose(1,2,0), cv2.COLOR_RGB2BGR))    
+
     return x, label
 
 def int2onehot(label):
@@ -59,7 +83,8 @@ def train_step(batchSize):
     tensor_x = torch.from_numpy(x).cuda().float()
     tensor_label = torch.from_numpy(label).type(torch.LongTensor).cuda()
     
-    for j in range(10):
+    for j in range(5):
+        optimizer.zero_grad()
         tensor_y = resnet(tensor_x)
         lossfunc = nn.CrossEntropyLoss()
         loss = lossfunc(tensor_y, tensor_label)
@@ -77,7 +102,8 @@ def train_step(batchSize):
 def val_step(valSize):
     resnet.eval()
     val_label = np.array([int(labels[index]) for index in val_set_list[:valSize]])
-    val_x = np.array([train_set[index].reshape(3, 32, 32) for index in val_set_list[:valSize]])
+    val_x = np.array([imgPreprcs(train_set[index].reshape(3, 32, 32)) 
+                      for index in val_set_list[:valSize]])
     tensor_x = torch.from_numpy(val_x).cuda().float()
 
     val_y_onehot = resnet(tensor_x).detach().cpu()
@@ -85,9 +111,16 @@ def val_step(valSize):
     
     accuracy = float(np.sum([int(val_label[i]==val_y_class[i]) for i in range(val_label.shape[0])])) / val_label.shape[0]
     
-    printlog("Val Accuracy: " + str(accuracy))
     
+    if SAVE_IMG:
+        cv2.imwrite("imgs/test.jpg", cv2.cvtColor(val_x[0].transpose(1,2,0), cv2.COLOR_RGB2BGR))    
+    
+    printlog("Val Accuracy: " + str(accuracy))
+   
+   
 
+shutil.rmtree("imgs/")
+os.mkdir("imgs/") 
 os.remove(LOGPATH)
 printlog("Current PID: " + str(os.getpid()))
 
@@ -102,8 +135,9 @@ with open('q1_data/train2.csv', 'r') as f:
     labels = [originaldata[i+1][1] for i in range(len(originaldata)-1)]
 
 torch.cuda.set_device(CUDA_DEVICE_IDX)
-resnet = ResNet.resnet34(num_classes=CLASS_NUM).cuda()
-optimizer = torch.optim.Adam(resnet.parameters(), lr=LR, weight_decay=0.005)
+resnet = classnet.ClassNet(num_classes=CLASS_NUM).cuda()
+# resnet = ResNet.resnet50(num_classes=CLASS_NUM).cuda()
+optimizer = torch.optim.Adam(resnet.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
 
 for i in range(EPOCH_NUM):
     loss, accuracy = train_step(EPOCH_SIZE)

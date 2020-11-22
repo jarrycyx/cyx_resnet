@@ -9,7 +9,7 @@ import ResNet
 CUDA_DEVICE_IDX = 2
 LR = 0.00001
 CLASS_NUM = 100
-PKL_MODEL_PATH = './pklmodels/train_epoch_5000.pkl'
+PKL_MODEL_PATH = './pklmodels/train_epoch_1000.pkl'
 
 
 torch.cuda.set_device(CUDA_DEVICE_IDX)
@@ -21,7 +21,7 @@ print("pkl loaded")
 
 
 train_set = np.load("q1_data/train.npy")
-val_set_list = np.load("val_list.npy")
+val_set_list = np.load("val_list.npy")[:2000]
 with open('q1_data/train2.csv', 'r') as f:
     csvreader = csv.reader(f)
     originaldata = [i for i in csvreader]
