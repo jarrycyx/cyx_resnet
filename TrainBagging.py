@@ -3,8 +3,6 @@ import torch
 import torch.nn as nn
 import cv2
 import csv
-import ResNet
-import classnet
 import time, os
 import shutil
 from torchvision import transforms as tfs
@@ -22,7 +20,7 @@ class TrainBag(object):
     CUDA_DEVICE_IDX = 2
     LR = 0.00001
     CLASS_NUM = 100
-    BATCH_SIZE = 200
+    BATCH_SIZE = 400
     LOGPATH = "resnet_train.log"
     WEIGHT_DECAY = 0
 
@@ -50,7 +48,7 @@ class TrainBag(object):
         
         self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
         self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
-                                    milestones=[int(epoch_num*1/3), int(epoch_num*2/3)], gamma=0.1)
+                                    milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
     
     def train_step(self, show_every=10):
         self.resnet.train()
@@ -103,7 +101,7 @@ class TrainBag(object):
     
 
 
-EPOCH_NUM = 60
+EPOCH_NUM = 80
 log = Log(clear=True)
 
 trainbags = []
@@ -120,6 +118,7 @@ for i in range(EPOCH_NUM):
         log.printlog("Bag: {:d} Epoch: {:d}/{:d}".format(j, i, EPOCH_NUM))
         trainbags[j].train_step()
         trainbags[j].val_step()
-        if i % int(EPOCH_NUM/3) == 0:
-            torch.save(trainbags[j].resnet.state_dict(),"./pklmodels/bag1_epoch_"+str(i+1)+".pkl")
+        if (i+1) % int(EPOCH_NUM/4) == 0:
+            torch.save(trainbags[j].resnet.state_dict(),"./pklmodels/bag"+str(j)+"_epoch_"+str(i+1)+".pkl")
+            log.printlog("Saving state pkls")
         
