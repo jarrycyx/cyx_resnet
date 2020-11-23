@@ -45,7 +45,6 @@ class TrainBag(object):
         self.resnet.fc = nn.Linear(fc_in, self.CLASS_NUM)
         self.resnet.cuda()
         
-        
         self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
         self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
                                     milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
@@ -92,7 +91,7 @@ class TrainBag(object):
             val_y_onehot = self.resnet(tensor_x).detach().cpu()
             val_y_class = torch.argmax(val_y_onehot, 1).numpy()
             
-            accuracy.append(float(np.sum([int(val_label[i]==val_y_class[i]) for i in range(val_label.shape[0])])) / val_label.shape[0])
+            accuracy.append(np.mean(val_label==val_y_class))
             
             # if 0:
             #     cv2.imwrite("imgs/test.jpg", cv2.cvtColor(val_x[0].transpose(1,2,0), cv2.COLOR_RGB2BGR))    

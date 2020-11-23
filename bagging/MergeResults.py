@@ -28,7 +28,8 @@ class BaggingResult(object):
         ys = torch.zeros([len(self.nets), batch.shape[0], self.CLASS_NUM])
         y_sum = torch.zeros([batch.shape[0], self.CLASS_NUM])
         for i in range(len(self.nets)):
-            tensor_y = self.nets[i](batch.cuda())
+            self.nets[i].eval()
+            tensor_y = self.nets[i](batch.cuda().float())
             ys[i] = tensor_y.detach().cpu()
             y_sum += ys[i]
         
