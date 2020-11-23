@@ -9,18 +9,19 @@ import time, os
 import shutil
 from torchvision import transforms as tfs
 from PIL import Image
+from torchvision import models
 
 CUDA_DEVICE_IDX = 2
 LR = 0.00001
 CLASS_NUM = 100
-EPOCH_NUM = 5000
-EPOCH_SIZE = 100
+EPOCH_NUM = 10000
+EPOCH_SIZE = 400
 VAL_EVERY = 20
 SAVE_EVERY = EPOCH_NUM / 5
 LOGPATH = "resnet_train.log"
-WEIGHT_DECAY = 0.01
+WEIGHT_DECAY = 0
 
-UP_SIZE = (100,100)
+UP_SIZE = (96,96)
 
 SAVE_IMG = False
 
@@ -46,7 +47,7 @@ def imgPreprcs(img): # 3x32x32
     im_aug = tfs.Compose([
         tfs.RandomHorizontalFlip(),
         tfs.ColorJitter(brightness=0.5, contrast=0.5),
-        tfs.RandomRotation(20),  # 随机旋转
+        tfs.RandomRotation(45),  # 随机旋转
         tfs.Resize(UP_SIZE),  # 调整大小
     ])
     return np.asarray(im_aug(img_pil)).transpose(2,0,1)
@@ -83,7 +84,7 @@ def train_step(batchSize):
     tensor_x = torch.from_numpy(x).cuda().float()
     tensor_label = torch.from_numpy(label).type(torch.LongTensor).cuda()
     
-    for j in range(5):
+    for j in range(1):
         optimizer.zero_grad()
         tensor_y = resnet(tensor_x)
         lossfunc = nn.CrossEntropyLoss()
@@ -135,16 +136,27 @@ with open('q1_data/train2.csv', 'r') as f:
     labels = [originaldata[i+1][1] for i in range(len(originaldata)-1)]
 
 torch.cuda.set_device(CUDA_DEVICE_IDX)
-resnet = classnet.ClassNet(num_classes=CLASS_NUM).cuda()
-# resnet = ResNet.resnet50(num_classes=CLASS_NUM).cuda()
+# resnet = classnet.ClassNet(num_classes=CLASS_NUM).cuda()
+resnet = models.resnet50(pretrained=True)
+fc_in = resnet.fc.in_features  # 获取全连接层的输入特征维度
+resnet.fc = nn.Linear(fc_in, 100)
+resnet.cuda()
+
 optimizer = torch.optim.Adam(resnet.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
+variableLR = torch.optim.lr_scheduler.MultiStepLR(optimizer, 
+                            milestones=[int(EPOCH_NUM*1/3), int(EPOCH_NUM*2/3)], gamma=0.1)
+
 
 for i in range(EPOCH_NUM):
+    this_LR = optimizer.param_groups[0]['lr']
+    
     loss, accuracy = train_step(EPOCH_SIZE)
-    printlog("{:d}/{:d} loss: {:.4f}  accuracy: {:.4f}".format(i, EPOCH_NUM, loss, accuracy))
+    printlog("{:d}/{:d} loss: {:.4f} accuracy: {:.4f} lr: {:.7f}" .format(i, EPOCH_NUM, loss, accuracy, this_LR))
     
     if (i + 1) % VAL_EVERY == 0:
         val_step(EPOCH_SIZE)
     
     if (i + 1) % SAVE_EVERY == 0:
         torch.save(resnet.state_dict(),"./pklmodels/train_epoch_"+str(i+1)+".pkl")
+        
+    variableLR.step()
