@@ -7,11 +7,11 @@ import cv2, csv
 
 class DatasetLoader(Dataset):
     
-    def __init__(self, csv_path, sets_path, refer_list_path, 
+    def __init__(self, csv_path, sets_path, refer_list=[], 
                  img_size=(3,32,32), up_size=(96,96), mode="Train"): # 先从refer_list中查询数据编号，再从sets中读取数据
         self.img_size = img_size
         self.dataset = np.load(sets_path)  # train和val的数据
-        self.refer_list = np.load(refer_list_path)
+        self.refer_list = refer_list
         self.mode = mode
         with open(csv_path, 'r') as f:
             csvreader = csv.reader(f)
@@ -42,7 +42,10 @@ class DatasetLoader(Dataset):
 
 
     def __getitem__(self, index, img_max=255.0):
-        dataset_index = self.refer_list[index]
+        if len(self.refer_list):
+            dataset_index = self.refer_list[index]
+        else:
+            dataset_index = index
         
         img = self.dataset[dataset_index].reshape(3, 32, 32) # 从数据集中取出图像
         label = int(self.labels[dataset_index])
@@ -52,7 +55,16 @@ class DatasetLoader(Dataset):
         img_pil = Image.fromarray(img, mode='RGB')
         img_aug = self.im_aug[self.mode](img_pil)
 
-        return (img_aug, label)
+        return (dataset_index, img_aug, label)
 
     def __len__(self):
-        return self.refer_list.shape[0]
+        if len(self.refer_list):
+            return self.refer_list.shape[0]
+        
+        return self.dataset.shape[0]
+
+
+def save_img_3x32x32(img, fp):
+    img_t = img.transpose(1,2,0)
+    cv2.imwrite(fp, cv2.cvtColor(img_t, cv2.COLOR_RGB2BGR))
+    

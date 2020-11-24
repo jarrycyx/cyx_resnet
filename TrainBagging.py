@@ -12,28 +12,30 @@ from torchvision import models
 from Utils.LogUtils import Log
 from Utils.ImgProcessing import ImgAugment
 from Utils import DataUtils
-from loss.FocalLoss import FocalLoss
+from loss.MultiLoss import MultiLoss
 
 
 
 class TrainBag(object):
 
     CUDA_DEVICE_IDX = 2
-    LR = 0.00001
+    LR = 0.00002
     CLASS_NUM = 20
-    BATCH_SIZE = 400
+    BATCH_SIZE = 100
     LOGPATH = "resnet_train.log"
     WEIGHT_DECAY = 0
 
-    UP_SIZE = (96,96)
+    UP_SIZE = (224,224)
     SAVE_IMG = False
     
     def __init__(self, csv_path, dataset_path, bag_refer_list, val_refer_list, logUtil):
         self.log = logUtil
         self.log.printlog("Current PID: " + str(os.getpid()))
         
-        TrainDataset = DataUtils.DatasetLoader(csv_path, dataset_path, bag_refer_list, mode="Train")
-        ValDataset = DataUtils.DatasetLoader(csv_path, dataset_path, val_refer_list, mode="Valid")
+        TrainDataset = DataUtils.DatasetLoader(csv_path, dataset_path, refer_list=np.load(bag_refer_list),
+                                               mode="Train", up_size=self.UP_SIZE)
+        ValDataset = DataUtils.DatasetLoader(csv_path, dataset_path, refer_list=np.load(val_refer_list), 
+                                             mode="Valid", up_size=self.UP_SIZE)
         
         self.trainloader = torch.utils.data.DataLoader(TrainDataset, batch_size=self.BATCH_SIZE, num_workers=2, shuffle=True)
         self.validloader = torch.utils.data.DataLoader(ValDataset, batch_size=self.BATCH_SIZE, num_workers=2, shuffle=True)
@@ -46,17 +48,18 @@ class TrainBag(object):
         self.resnet.fc = nn.Linear(fc_in, self.CLASS_NUM)
         self.resnet.cuda()
         
+        # self.optimizer = torch.optim.SGD(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
         self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
-        self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
-                                    milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
+        # self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
+        #                             milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
     
     def train_step(self, show_every=10):
         self.resnet.train()
         # lossfunc = nn.CrossEntropyLoss()
-        lossfunc = FocalLoss(gamma=2)
+        lossfunc = MultiLoss(focal_gamma=2)
         this_LR = self.optimizer.param_groups[0]['lr']
         for i, data in enumerate(self.trainloader):
-            x, label = data
+            _, x, label = data
             tensor_x = x.cuda().float()
             tensor_label = label.type(torch.LongTensor).cuda()
             
@@ -78,7 +81,7 @@ class TrainBag(object):
                      .format(i, len(self.trainloader), loss, accuracy, this_LR))
         
         
-        self.variableLR.step()
+        # self.variableLR.step()
             
             
 
@@ -86,7 +89,7 @@ class TrainBag(object):
         self.resnet.eval()
         accuracy = []
         for i, data in enumerate(self.validloader):
-            val_x, val_label = data
+            _, val_x, val_label = data
             
             tensor_x = val_x.cuda().float()
             val_y_onehot = self.resnet(tensor_x).detach().cpu()
@@ -99,8 +102,8 @@ class TrainBag(object):
         self.log.printlog("Val Accuracy: {:.4f}".format(np.array(accuracy).mean()))
     
 
-
-EPOCH_NUM = 80
+CUDA_DEVICE = 2
+EPOCH_NUM = 50
 log = Log(clear=True)
 
 trainbags = []
@@ -108,10 +111,11 @@ trainbags = []
 trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag1.npy", "bagging/val.npy", log))
 trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag2.npy", "bagging/val.npy", log))
 trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag3.npy", "bagging/val.npy", log))
-trainbags[0].load_net(2, EPOCH_NUM)
-trainbags[1].load_net(2, EPOCH_NUM)
-trainbags[2].load_net(2, EPOCH_NUM)
 
+# trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/train_list.npy", "bagging/val_list.npy", log))
+for j in range(len(trainbags)):
+    trainbags[j].load_net(CUDA_DEVICE, EPOCH_NUM)
+    
 for i in range(EPOCH_NUM):
     for j in range(len(trainbags)):
         log.printlog("Bag: {:d} Epoch: {:d}/{:d}".format(j, i, EPOCH_NUM))
