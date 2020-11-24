@@ -48,8 +48,8 @@ class DatasetLoader(Dataset):
         label = int(self.labels[dataset_index])
         
         img = img.transpose(1,2,0)
-        img_med = cv2.medianBlur(img,3)#RGBmed(img, 3)
-        img_pil = Image.fromarray(img_med, mode='RGB')
+        #img_med = cv2.medianBlur(img,3)#RGBmed(img, 3)
+        img_pil = Image.fromarray(img, mode='RGB')
         img_aug = self.im_aug[self.mode](img_pil)
 
         return (img_aug, label)

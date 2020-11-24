@@ -12,6 +12,7 @@ from torchvision import models
 from Utils.LogUtils import Log
 from Utils.ImgProcessing import ImgAugment
 from Utils import DataUtils
+from loss.FocalLoss import FocalLoss
 
 
 
@@ -19,7 +20,7 @@ class TrainBag(object):
 
     CUDA_DEVICE_IDX = 2
     LR = 0.00001
-    CLASS_NUM = 100
+    CLASS_NUM = 20
     BATCH_SIZE = 400
     LOGPATH = "resnet_train.log"
     WEIGHT_DECAY = 0
@@ -51,7 +52,8 @@ class TrainBag(object):
     
     def train_step(self, show_every=10):
         self.resnet.train()
-        lossfunc = nn.CrossEntropyLoss()
+        # lossfunc = nn.CrossEntropyLoss()
+        lossfunc = FocalLoss(gamma=2)
         this_LR = self.optimizer.param_groups[0]['lr']
         for i, data in enumerate(self.trainloader):
             x, label = data
@@ -69,7 +71,7 @@ class TrainBag(object):
             y = tensor_y.detach().cpu()
             y_class = torch.argmax(y, 1).numpy()
         
-            accuracy = float(np.sum([int(label[i]==y_class[i]) for i in range(label.shape[0])])) / label.shape[0]
+            accuracy = np.mean(label.numpy()==y_class)
             
             if i % show_every == 0:
                 self.log.printlog("Batch: {:d}/{:d} loss: {:.4f} accuracy: {:.4f} lr: {:.7f}" 
@@ -87,11 +89,9 @@ class TrainBag(object):
             val_x, val_label = data
             
             tensor_x = val_x.cuda().float()
-
             val_y_onehot = self.resnet(tensor_x).detach().cpu()
             val_y_class = torch.argmax(val_y_onehot, 1).numpy()
-            
-            accuracy.append(np.mean(val_label==val_y_class))
+            accuracy.append(np.mean(val_label.numpy()==val_y_class))
             
             # if 0:
             #     cv2.imwrite("imgs/test.jpg", cv2.cvtColor(val_x[0].transpose(1,2,0), cv2.COLOR_RGB2BGR))    
@@ -105,9 +105,9 @@ log = Log(clear=True)
 
 trainbags = []
 
-trainbags.append(TrainBag("q1_data/train2.csv", "q1_data/train.npy", "bagging/bag1.npy", "bagging/val.npy", log))
-trainbags.append(TrainBag("q1_data/train2.csv", "q1_data/train.npy", "bagging/bag2.npy", "bagging/val.npy", log))
-trainbags.append(TrainBag("q1_data/train2.csv", "q1_data/train.npy", "bagging/bag3.npy", "bagging/val.npy", log))
+trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag1.npy", "bagging/val.npy", log))
+trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag2.npy", "bagging/val.npy", log))
+trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag3.npy", "bagging/val.npy", log))
 trainbags[0].load_net(2, EPOCH_NUM)
 trainbags[1].load_net(2, EPOCH_NUM)
 trainbags[2].load_net(2, EPOCH_NUM)
@@ -120,4 +120,3 @@ for i in range(EPOCH_NUM):
         if (i+1) % int(EPOCH_NUM/4) == 0:
             torch.save(trainbags[j].resnet.state_dict(),"./pklmodels/bag"+str(j)+"_epoch_"+str(i+1)+".pkl")
             log.printlog("Saving state pkls")
-        
