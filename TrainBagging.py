@@ -50,10 +50,10 @@ class TrainBag(object):
         
         # self.optimizer = torch.optim.SGD(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
         self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
-        # self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
-        #                             milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
+        self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
+                                   milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
     
-    def train_step(self, show_every=10):
+    def train_step(self, show_every=30):
         self.resnet.train()
         # lossfunc = nn.CrossEntropyLoss()
         lossfunc = MultiLoss(focal_gamma=2)
@@ -81,7 +81,7 @@ class TrainBag(object):
                      .format(i, len(self.trainloader), loss, accuracy, this_LR))
         
         
-        # self.variableLR.step()
+        self.variableLR.step()
             
             
 
@@ -103,7 +103,7 @@ class TrainBag(object):
     
 
 CUDA_DEVICE = 2
-EPOCH_NUM = 50
+EPOCH_NUM = 40
 log = Log(clear=True)
 
 trainbags = []

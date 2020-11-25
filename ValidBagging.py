@@ -7,14 +7,14 @@ from Utils import DataUtils
 csv_path = "q1_data/train1.csv"
 dataset_path = "q1_data/train.npy"
 val_refer_list = "bagging/val.npy"
-BATCH_SIZE = 200
+BATCH_SIZE = 50
 CUDA_DEVICE = 2
 CLASS_NUM = 20
 UP_SIZE = (224,224)
 
-bag_pkl_paths=["./pklmodels/bag0_epoch_80.pkl",
-                "./pklmodels/bag1_epoch_80.pkl",
-                "./pklmodels/bag2_epoch_80.pkl"]
+bag_pkl_paths=["./pklmodels/bag0_epoch_24.pkl",
+                "./pklmodels/bag1_epoch_24.pkl",
+                "./pklmodels/bag2_epoch_24.pkl"]
 
 ValDataset = DataUtils.DatasetLoader(csv_path, dataset_path, refer_list=np.load(val_refer_list),
                                      mode="Valid", up_size=UP_SIZE)

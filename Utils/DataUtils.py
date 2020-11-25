@@ -26,17 +26,20 @@ class DatasetLoader(Dataset):
                         tfs.RandomRotation(45),  # 随机旋转
                         tfs.Resize(up_size),  # 调整大小
                         tfs.ToTensor(),
-                        tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
+                        tfs.Normalize([np.mean(self.dataset) / 255], [np.std(self.dataset) / 255])
+                        #tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
                     ]),
             "Valid":tfs.Compose([ # valid
                         tfs.Resize(up_size),  # 调整大小
                         tfs.ToTensor(),
-                        tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
+                        tfs.Normalize([np.mean(self.dataset) / 255], [np.std(self.dataset) / 255])
+                        #tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
                     ]),
             "Test":tfs.Compose([ #test
                         tfs.Resize(up_size),  # 调整大小
                         tfs.ToTensor(),
-                        tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
+                        tfs.Normalize([np.mean(self.dataset) / 255], [np.std(self.dataset) / 255])
+                        #tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
                     ])
         }
 
