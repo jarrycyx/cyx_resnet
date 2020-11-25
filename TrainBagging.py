@@ -21,7 +21,7 @@ class TrainBag(object):
     CUDA_DEVICE_IDX = 2
     LR = 0.00002
     CLASS_NUM = 20
-    BATCH_SIZE = 100
+    BATCH_SIZE = 30
     LOGPATH = "resnet_train.log"
     WEIGHT_DECAY = 0
 
@@ -31,6 +31,7 @@ class TrainBag(object):
     def __init__(self, csv_path, dataset_path, bag_refer_list, val_refer_list, logUtil):
         self.log = logUtil
         self.log.printlog("Current PID: " + str(os.getpid()))
+        self.net_des = description
         
         TrainDataset = DataUtils.DatasetLoader(csv_path, dataset_path, refer_list=np.load(bag_refer_list),
                                                mode="Train", up_size=self.UP_SIZE)
@@ -43,7 +44,7 @@ class TrainBag(object):
     def load_net(self, cuda_device_index, epoch_num):
         torch.cuda.set_device(cuda_device_index)
         # resnet = classnet.ClassNet(num_classes=CLASS_NUM).cuda()
-        self.resnet = models.resnet50(pretrained=True)
+        self.resnet = models.resnet152(pretrained=True)
         fc_in = self.resnet.fc.in_features  # 获取全连接层的输入特征维度
         self.resnet.fc = nn.Linear(fc_in, self.CLASS_NUM)
         self.resnet.cuda()
@@ -102,7 +103,8 @@ class TrainBag(object):
         self.log.printlog("Val Accuracy: {:.4f}".format(np.array(accuracy).mean()))
     
 
-CUDA_DEVICE = 2
+CUDA_DEVICE = [2,2,2]
+DESCRIPTIONS = ["CE_FL_A", "CE_FL_B", "CE_FL_C"]
 EPOCH_NUM = 40
 log = Log(clear=True)
 
@@ -114,7 +116,7 @@ trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/ba
 
 # trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/train_list.npy", "bagging/val_list.npy", log))
 for j in range(len(trainbags)):
-    trainbags[j].load_net(CUDA_DEVICE, EPOCH_NUM)
+    trainbags[j].load_net(CUDA_DEVICE[j], EPOCH_NUM)
     
 for i in range(EPOCH_NUM):
     for j in range(len(trainbags)):
@@ -122,5 +124,5 @@ for i in range(EPOCH_NUM):
         trainbags[j].train_step()
         trainbags[j].val_step()
         if (i+1) % int(EPOCH_NUM/4) == 0:
-            torch.save(trainbags[j].resnet.state_dict(),"./pklmodels/bag"+str(j)+"_epoch_"+str(i+1)+".pkl")
+            torch.save(trainbags[j].resnet.state_dict(),"./pklmodels/"+DESCRIPTIONS[j]+"_epoch_"+str(i+1)+".pkl")
             log.printlog("Saving state pkls")
