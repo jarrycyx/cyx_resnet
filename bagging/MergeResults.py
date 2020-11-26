@@ -16,7 +16,7 @@ class BaggingResult(object):
         torch.cuda.set_device(device)
         self.nets = []
         for path in bag_pkl_paths:
-            resnet = models.resnet50(pretrained=True)
+            resnet = models.resnet152(pretrained=True)
             fc_in = resnet.fc.in_features  # 获取全连接层的输入特征维度
             resnet.fc = nn.Linear(fc_in, self.CLASS_NUM)
             resnet.load_state_dict(torch.load(path))
