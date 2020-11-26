@@ -9,16 +9,16 @@ from Utils import DataUtils
 
 save_csv_path = "q1_data/samplesummision_class20.csv"
 testset_path = "q1_data/test.npy"
-BATCH_SIZE = 200
+BATCH_SIZE = 20
 CUDA_DEVICE = 2
 CLASS_NUM = 20
 UP_SIZE = (224,224)
 
 csvheader = ["image_id", "coarse_label"]
 
-bag_pkl_paths=["./pklmodels/bag0_epoch_40.pkl",
-                "./pklmodels/bag1_epoch_40.pkl",
-                "./pklmodels/bag2_epoch_40.pkl"]
+bag_pkl_paths=["./pklmodels/bag0_epoch_40_class20.pkl",
+                "./pklmodels/bag1_epoch_40_class20.pkl",
+                "./pklmodels/bag2_epoch_40_class20.pkl"]
 
 testDataset = DataUtils.DatasetLoader(save_csv_path, testset_path, 
                                       mode="Test", up_size=UP_SIZE)

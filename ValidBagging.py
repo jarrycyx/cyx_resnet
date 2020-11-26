@@ -9,7 +9,7 @@ dataset_path = "q1_data/train.npy"
 val_refer_list = "bagging/val.npy"
 BATCH_SIZE = 20
 CUDA_DEVICE = 2
-CLASS_NUM = 20
+CLASS_NUM = 100
 UP_SIZE = (224,224)
 
 bag_pkl_paths=["./pklmodels/bag0_epoch_40.pkl",

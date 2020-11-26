@@ -20,7 +20,7 @@ class TrainBag(object):
 
     CUDA_DEVICE_IDX = 2
     LR = 0.00002
-    CLASS_NUM = 20
+    CLASS_NUM = 100
     BATCH_SIZE = 30
     LOGPATH = "resnet_train.log"
     WEIGHT_DECAY = 0
@@ -104,15 +104,15 @@ class TrainBag(object):
     
 
 CUDA_DEVICE = [2,2,2]
-DESCRIPTIONS = ["CE_FL_A", "CE_FL_B", "CE_FL_C"]
+DESCRIPTIONS = ["Class100_A", "Class100_B", "Class100_C"] # different descriptions
 EPOCH_NUM = 40
 log = Log(clear=True)
 
 trainbags = []
 
-trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag1.npy", "bagging/val.npy", log))
-trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag2.npy", "bagging/val.npy", log))
-trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/bag3.npy", "bagging/val.npy", log))
+trainbags.append(TrainBag("q1_data/train2.csv", "q1_data/train.npy", "bagging/bag1.npy", "bagging/val.npy", log))
+trainbags.append(TrainBag("q1_data/train2.csv", "q1_data/train.npy", "bagging/bag2.npy", "bagging/val.npy", log))
+trainbags.append(TrainBag("q1_data/train2.csv", "q1_data/train.npy", "bagging/bag3.npy", "bagging/val.npy", log))
 
 # trainbags.append(TrainBag("q1_data/train1.csv", "q1_data/train.npy", "bagging/train_list.npy", "bagging/val_list.npy", log))
 for j in range(len(trainbags)):
