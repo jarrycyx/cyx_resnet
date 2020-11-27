@@ -44,12 +44,12 @@
 
 #### 准确率
 ##### 20分类：
-Merge Accuracy: 0.9060
-Bag 0 Accuracy: 0.8862
-Bag 1 Accuracy: 0.8818
-Bag 2 Accuracy: 0.8860
+Merge Accuracy: 0.9060 
+Bag 0 Accuracy: 0.8862 
+Bag 1 Accuracy: 0.8818 
+Bag 2 Accuracy: 0.8860 
 ##### 100分类
-Merge Accuracy: 0.8362
-Bag 0 Accuracy: 0.8042
-Bag 1 Accuracy: 0.8108
-Bag 2 Accuracy: 0.8068
+Merge Accuracy: 0.8362 
+Bag 0 Accuracy: 0.8042 
+Bag 1 Accuracy: 0.8108 
+Bag 2 Accuracy: 0.8068 
