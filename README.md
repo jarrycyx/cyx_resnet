@@ -1,4 +1,4 @@
-# 基于ResNet152的图像分类
+## 基于ResNet152的图像分类
 
 ### 训练流程
 1. 分割数据集（SplitDataset.py）
