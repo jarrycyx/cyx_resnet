@@ -1,17 +1,15 @@
-## 基于ResNet152的图像分类
+# 基于ResNet152的图像分类
 
----
-
-#### 训练流程
+### 训练流程
 1. 分割数据集（SplitDataset.py）
 2. 设置数据集位置、使用gpu设备、分类数目等参数（TrainBagging.py）
 3. 开始训练（MultiThreadTrain.py）
 4. 验证bagging准确率（ValidBagging.py）
 5. 保存测试集分类结果到csv（SaveTestResults.py）
 
-#### 文件目录说明
+### 文件目录说明
 
-[./Utils/](./Utils/) 训练所需的工具类/函数
+./Utils/ 训练所需的工具类/函数
 
 ./Utils/DataUtils 定义生成数据集的方式
 
@@ -42,8 +40,8 @@
 ./MultiThreadTrain.py **顶层文件**。为了防止CPU的阻塞影响GPU多卡运算的效率，使用多线程训练
 
 
-#### 准确率
-##### 20分类：
+### 准确率
+#### 20分类：
 Merge Accuracy: 0.9060
 
 Bag 0 Accuracy: 0.8862 
@@ -52,7 +50,7 @@ Bag 1 Accuracy: 0.8818
 
 Bag 2 Accuracy: 0.8860 
 
-##### 100分类
+#### 100分类
 Merge Accuracy: 0.8362 
 
 Bag 0 Accuracy: 0.8042 
