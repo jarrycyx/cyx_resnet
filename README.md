@@ -11,7 +11,7 @@
 
 #### 文件目录说明
 
-./Utils/ 训练所需的工具类/函数
+[./Utils/](./Utils/) 训练所需的工具类/函数
 
 ./Utils/DataUtils 定义生成数据集的方式
 
@@ -44,12 +44,20 @@
 
 #### 准确率
 ##### 20分类：
-Merge Accuracy: 0.9060 
+Merge Accuracy: 0.9060
+
 Bag 0 Accuracy: 0.8862 
+
 Bag 1 Accuracy: 0.8818 
+
 Bag 2 Accuracy: 0.8860 
+
 ##### 100分类
 Merge Accuracy: 0.8362 
+
 Bag 0 Accuracy: 0.8042 
+
 Bag 1 Accuracy: 0.8108 
+
 Bag 2 Accuracy: 0.8068 
+
