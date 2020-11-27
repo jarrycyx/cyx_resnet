@@ -6,6 +6,7 @@
 3. 开始训练（MultiThreadTrain.py）
 4. 验证bagging准确率（ValidBagging.py）
 5. 保存测试集分类结果到csv（SaveTestResults.py）
+6. 绘制训练曲线（PlotCurves.py）
 
 ### 文件目录说明
 
@@ -38,6 +39,8 @@
 ./SaveTestResults.py 训练完成后保存测试集分类结果到csv文件
 
 ./MultiThreadTrain.py **顶层文件**。为了防止CPU的阻塞影响GPU多卡运算的效率，使用多线程训练
+
+./PlotCurves.py 从log读取数据，绘制训练过程的loss和accuracy变化曲线
 
 
 ### 准确率
