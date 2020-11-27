@@ -1,3 +1,6 @@
+# 利用集成学习进行训练，同时训练三个结构相同、训练集不同的网络
+# 为了防止CPU的阻塞影响GPU多卡运算的效率，可以在MultiThreadTrain.py使用多线程训练
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -15,7 +18,7 @@ from Utils import DataUtils
 from loss.MultiLoss import MultiLoss
 
 
-
+# trainbag类定义为“一个网络的训练”，可分别指定训练集、使用的gpu等
 class TrainBag(object):
 
     CUDA_DEVICE_IDX = 2
@@ -105,7 +108,9 @@ class TrainBag(object):
             # if 0:
             #     cv2.imwrite("imgs/test.jpg", cv2.cvtColor(val_x[0].transpose(1,2,0), cv2.COLOR_RGB2BGR))    
             
-        self.printlog("Val Accuracy: {:.4f} ({:s})".format(np.array(accuracy).mean(), self.description))
+        mean_accu = np.array(accuracy).mean()
+        self.printlog("Val Accuracy: {:.4f} ({:s})".format(mean_accu, self.description))
+        return mean_accu
     
 
 if __name__ == "__main__":

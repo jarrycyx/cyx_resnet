@@ -1,6 +1,8 @@
 from TrainBagging import TrainBag
 import threading
 from Utils.LogUtils import Log
+import numpy as np
+import torch
 
 class TrainThread (threading.Thread):
     def __init__(self, name, trainbag):
@@ -14,13 +16,16 @@ class TrainThread (threading.Thread):
         log.printlog ("Exit Thread: " + self.name)
 
 def init_train(trainbag, name):
+    accu = []
     for i in range(EPOCH_NUM):
         log.printlog("Epoch: {:d}/{:d} ({:s})".format(i, EPOCH_NUM, name))
         trainbag.train_step(show_every=200)
-        trainbag.val_step()
+        accu.append(trainbag.val_step())
         if (i+1) % int(EPOCH_NUM/4) == 0:
             torch.save(trainbag.resnet.state_dict(),"./pklmodels/"+name+"_epoch_"+str(i+1)+".pkl")
             log.printlog("Saving state pkls:" + name)
+            
+    np.save("logs/"+name+"_accu.npy", np.array(accu))
         
 
 CUDA_DEVICE = [2,3,3]

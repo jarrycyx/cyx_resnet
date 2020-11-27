@@ -1,3 +1,7 @@
+# 利用集成学习（bagging）进行验证，得到完整的准确率
+# 该验证集来源于 q1_data/train.npy 划分出5000张图片
+# 查找表（即存储属于验证集的图片序号）为bagging/val.npy
+
 import numpy as np
 import torch
 import torch.nn as nn
