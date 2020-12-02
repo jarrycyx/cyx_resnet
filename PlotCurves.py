@@ -25,4 +25,31 @@ def get_bag(bag_des):
     
     return mean_train_accus, mean_train_losses, val_accus
     
-train_accuA, train_lossA, val_accuA = trget_bag("Class20_A")
+train_accuA, train_lossA, val_accuA = get_bag("Class20_A")
+train_accuB, train_lossB, val_accuB = get_bag("Class20_B")
+train_accuC, train_lossC, val_accuC = get_bag("Class20_C")
+
+epochnum = np.arange(40)
+merge_accu = np.ones(40)*0.9060
+
+plt.plot(epochnum, train_accuA, label="Train A")
+plt.plot(epochnum, train_accuB, label="Train B")
+plt.plot(epochnum, train_accuC, label="Train C")
+plt.plot(epochnum, val_accuA, label="Val A")
+plt.plot(epochnum, val_accuB, label="Val B")
+plt.plot(epochnum, val_accuC, label="Val C")
+plt.plot(epochnum, merge_accu,linestyle=":", label="Bagging")
+plt.title("Train & Val Accuracy (Classnum=20)")
+plt.xlabel("Epoch Num")
+plt.ylabel("Accuracy")
+plt.legend()
+plt.show()
+
+plt.plot(epochnum, train_lossA, label="Train A")
+plt.plot(epochnum, train_lossB, label="Train B")
+plt.plot(epochnum, train_lossC, label="Train C")
+plt.xlabel("Epoch Num")
+plt.ylabel("Loss")
+plt.title("Train Loss (Classnum=20)")
+plt.legend()
+plt.show()
