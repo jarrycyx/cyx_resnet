@@ -1,6 +1,3 @@
-# 利用集成学习进行训练，同时训练三个结构相同、训练集不同的网络
-# 为了防止CPU的阻塞影响GPU多卡运算的效率，可以在MultiThreadTrain.py使用多线程训练
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -18,13 +15,13 @@ from Utils import DataUtils
 from loss.MultiLoss import MultiLoss
 
 
-# trainbag类定义为“一个网络的训练”，可分别指定训练集、使用的gpu等
+
 class TrainBag(object):
 
     CUDA_DEVICE_IDX = 2
-    LR = 0.00002
-    CLASS_NUM = 100
-    BATCH_SIZE = 30
+    LR = 0.002
+    CLASS_NUM = 20
+    BATCH_SIZE = 50
     LOGPATH = "resnet_train.log"
     WEIGHT_DECAY = 0
 
@@ -53,12 +50,12 @@ class TrainBag(object):
         # torch.cuda.set_device(self.device)
         # resnet = classnet.ClassNet(num_classes=CLASS_NUM).cuda()
         self.resnet = models.resnet152(pretrained=True)
-        fc_in = self.resnet.fc.in_features  # 获取全连接层的输入特征维度
+        fc_in = self.resnet.fc.in_features 
         self.resnet.fc = nn.Linear(fc_in, self.CLASS_NUM)
         self.resnet.to(self.device)
         
-        # self.optimizer = torch.optim.SGD(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
-        self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
+        self.optimizer = torch.optim.SGD(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
+        # self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
         self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
                                    milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
     
