@@ -1,3 +1,5 @@
+# nohup python MultiThreadTrain.py >out.log &
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,10 +22,10 @@ class TrainBag(object):
 
     CUDA_DEVICE_IDX = 2
     LR = 0.002
-    CLASS_NUM = 20
+    CLASS_NUM = 100
     BATCH_SIZE = 50
     LOGPATH = "resnet_train.log"
-    WEIGHT_DECAY = 0
+    WEIGHT_DECAY = 0.0001
 
     UP_SIZE = (224,224)
     SAVE_IMG = False
@@ -45,6 +47,8 @@ class TrainBag(object):
         
         self.trainloader = torch.utils.data.DataLoader(TrainDataset, batch_size=self.BATCH_SIZE, num_workers=2, shuffle=True)
         self.validloader = torch.utils.data.DataLoader(ValDataset, batch_size=self.BATCH_SIZE, num_workers=2, shuffle=True)
+
+        self.max_accu = 0
     
     def load_net(self, epoch_num=40):
         # torch.cuda.set_device(self.device)
@@ -54,10 +58,9 @@ class TrainBag(object):
         self.resnet.fc = nn.Linear(fc_in, self.CLASS_NUM)
         self.resnet.to(self.device)
         
-        self.optimizer = torch.optim.SGD(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
+        self.optimizer = torch.optim.SGD(self.resnet.parameters(), lr=self.LR, momentum=0.9, weight_decay=self.WEIGHT_DECAY, nesterov=True)
         # self.optimizer = torch.optim.Adam(self.resnet.parameters(), lr=self.LR, weight_decay=self.WEIGHT_DECAY)
-        self.variableLR = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, 
-                                   milestones=[int(epoch_num*2/4), int(epoch_num*3/4)], gamma=0.1)
+        self.variableLR = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=0.5)
     
     def train_step(self, show_every=30):
         self.resnet.train()
@@ -87,11 +90,11 @@ class TrainBag(object):
                      .format(i, len(self.trainloader), loss, accuracy, this_LR, self.description))
         
         
-        self.variableLR.step()
+        # self.variableLR.step()
             
             
 
-    def val_step(self):
+    def val_step(self, epoch_idx):
         self.resnet.eval()
         accuracy = []
         for i, data in enumerate(self.validloader):
@@ -106,7 +109,12 @@ class TrainBag(object):
             #     cv2.imwrite("imgs/test.jpg", cv2.cvtColor(val_x[0].transpose(1,2,0), cv2.COLOR_RGB2BGR))    
             
         mean_accu = np.array(accuracy).mean()
-        self.printlog("Val Accuracy: {:.4f} ({:s})".format(mean_accu, self.description))
+        if mean_accu > self.max_accu:
+            self.max_accu = mean_accu
+        else:
+            self.variableLR.step()
+
+        self.printlog("Epoch: {:d} Val Accuracy: {:.4f} Max: {:/4f} ({:s})".format(epoch_idx, mean_accu, self.max_accu, self.description))
         return mean_accu
     
 
@@ -131,7 +139,7 @@ if __name__ == "__main__":
         for j in range(len(trainbags)):
             log.printlog("Bag: {:d} Epoch: {:d}/{:d}".format(j, i, EPOCH_NUM))
             trainbags[j].train_step(show_every=100)
-            trainbags[j].val_step()
+            trainbags[j].val_step(i)
             if (i+1) % int(EPOCH_NUM/4) == 0:
                 torch.save(trainbags[j].resnet.state_dict(),"./pklmodels/"+DESCRIPTIONS[j]+"_epoch_"+str(i+1)+".pkl")
                 log.printlog("Saving state pkls")

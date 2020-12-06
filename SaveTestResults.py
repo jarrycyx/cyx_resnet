@@ -7,20 +7,20 @@ import math, cv2, csv
 
 from Utils import DataUtils
 
-save_csv_path = "q1_data/samplesummision_class20.csv"
+save_csv_path = "q1_data/samplesummision_class100.csv"
 testset_path = "q1_data/test.npy"
 BATCH_SIZE = 20
 CUDA_DEVICE = 2
-CLASS_NUM = 20
+CLASS_NUM = 100
 UP_SIZE = (224,224)
 
-csvheader = ["image_id", "coarse_label"]
+csvheader = ["image_id", "fine_label"]
 
-bag_pkl_paths=["./pklmodels/bag0_epoch_40_class20.pkl",
-                "./pklmodels/bag1_epoch_40_class20.pkl",
-                "./pklmodels/bag2_epoch_40_class20.pkl"]
+bag_pkl_paths=["./pklmodels/Class20_A_epoch_40.pkl",
+                "./pklmodels/Class20_B_epoch_40.pkl",
+                "./pklmodels/Class20_C_epoch_40.pkl"]
 
-testDataset = DataUtils.DatasetLoader(save_csv_path, testset_path, 
+testDataset = DataUtils.DatasetLoader("q1_data/samplesummission1.csv", testset_path, 
                                       mode="Test", up_size=UP_SIZE)
 
 setsize = len(testDataset)

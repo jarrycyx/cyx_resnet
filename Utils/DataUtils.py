@@ -20,11 +20,11 @@ class DatasetLoader(Dataset):
             
         self.im_aug = {
             "Train":tfs.Compose([  # train
-                        tfs.RandomHorizontalFlip(),
-                        tfs.RandomVerticalFlip(),
-                        tfs.ColorJitter(brightness=0.5, contrast=0.5),
-                        tfs.RandomRotation(45),  # 随机旋转
                         tfs.Resize(up_size),  # 调整大小
+                        tfs.RandomHorizontalFlip(),
+                        # tfs.RandomVerticalFlip(),
+                        # tfs.ColorJitter(brightness=0.5, contrast=0.5),
+                        # tfs.RandomRotation(8),  # 随机旋转
                         tfs.ToTensor(),
                         tfs.Normalize([np.mean(self.dataset) / 255], [np.std(self.dataset) / 255])
                         #tfs.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))

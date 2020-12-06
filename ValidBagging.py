@@ -1,14 +1,10 @@
-# 利用集成学习（bagging）进行验证，得到完整的准确率
-# 该验证集来源于 q1_data/train.npy 划分出5000张图片
-# 查找表（即存储属于验证集的图片序号）为bagging/val.npy
-
 import numpy as np
 import torch
 import torch.nn as nn
 from bagging.MergeResults import BaggingResult
 from Utils import DataUtils
 
-csv_path = "q1_data/train1.csv"
+csv_path = "q1_data/train2.csv"
 dataset_path = "q1_data/train.npy"
 val_refer_list = "bagging/val.npy"
 BATCH_SIZE = 20
@@ -16,9 +12,9 @@ CUDA_DEVICE = 2
 CLASS_NUM = 100
 UP_SIZE = (224,224)
 
-bag_pkl_paths=["./pklmodels/bag0_epoch_40.pkl",
-                "./pklmodels/bag1_epoch_40.pkl",
-                "./pklmodels/bag2_epoch_40.pkl"]
+bag_pkl_paths=["./pklmodels/Class100_A_epoch_40.pkl",
+                "./pklmodels/Class100_B_epoch_40.pkl",
+                "./pklmodels/Class100_C_epoch_40.pkl"]
 
 ValDataset = DataUtils.DatasetLoader(csv_path, dataset_path, refer_list=np.load(val_refer_list),
                                      mode="Valid", up_size=UP_SIZE)
