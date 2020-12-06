@@ -114,7 +114,7 @@ class TrainBag(object):
         else:
             self.variableLR.step()
 
-        self.printlog("Epoch: {:d} Val Accuracy: {:.4f} Max: {:/4f} ({:s})".format(epoch_idx, mean_accu, self.max_accu, self.description))
+        self.printlog("Epoch: {:d} Val Accuracy: {:.4f} Max: {:4f} ({:s})".format(epoch_idx, mean_accu, self.max_accu, self.description))
         return mean_accu
     
 
